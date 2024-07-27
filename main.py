@@ -12,22 +12,24 @@ def main():
         return
     try:
         image = Image.open(path)
-        mask = Image.new("1", image.size, 0)
+        mask = Image.new("L", image.size, 0)
         sort_image = image.copy()
         mask_pixels = mask.load()
         sort_pixels = sort_image.load()
 
         for i in range(sort_image.size[0]):
-            sort_row = list()
+            sort_col = list()
             for j in range(sort_image.size[1]):
-                if sort_pixels[i, j][0] > 150:
+                pixel = sort_pixels[i, j]
+                if pixel[0] > 150:
                     mask_pixels[i, j] = 0
                 else:
-                    mask_pixels[i, j] = 1
-                sort_row.append(sort_pixels[i, j])
-            sort_row.sort()
+                    mask_pixels[i, j] = 255
+                sort_col.append(sort_pixels[i, j])
+            sort_col = sorted(sort_col, key=lambda v: v[0])
+
             for j in range(sort_image.size[1]):
-                sort_pixels[i, j] = sort_row[j]
+                sort_pixels[i, j] = sort_col[j]
 
         mask.save("./mask.jpeg")
 
