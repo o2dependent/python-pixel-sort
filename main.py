@@ -1,5 +1,31 @@
-from PIL import Image
+import cv2
+import numpy as np
 import sys
+
+
+def get_flesh_tone_mask(
+    image: cv2.typing.MatLike,
+) -> cv2.typing.MatLike:
+    lower = np.array([45, 34, 30], dtype=np.uint8)  # Lower bound for flesh tone in RGB
+    upper = np.array(
+        [255, 104, 183], dtype=np.uint8
+    )  # Upper bound for flesh tone in RGB
+
+    mask = cv2.inRange(image, lower, upper)
+
+    return mask
+
+
+def sort_pixels(image: cv2.typing.MatLike) -> cv2.typing.MatLike:
+    width, height, _ = image.shape
+    for i in range(width):
+        row = list()
+        for j in range(height):
+            row.append(image[i, j])
+        row = sorted(row, key=lambda v: v[0])
+        for j in range(height):
+            image[i, j] = row[j]
+    return image
 
 
 def main():
@@ -11,31 +37,22 @@ def main():
         print("Invalid arg for file")
         return
     try:
-        image = Image.open(path)
-        mask = Image.new("L", image.size, 0)
-        sort_image = image.copy()
-        mask_pixels = mask.load()
-        sort_pixels = sort_image.load()
+        image = cv2.imread(path)
+        flesh_tone_mask = get_flesh_tone_mask(image)
+        flesh_tone_mask_inv = cv2.bitwise_not(flesh_tone_mask)
+        copied_image = image.copy()
+        sorted_copy = sort_pixels(copied_image)
+        result_bg = cv2.bitwise_and(sorted_copy, sorted_copy, mask=flesh_tone_mask)
+        result_fg = cv2.bitwise_and(image, image, mask=flesh_tone_mask_inv)
+        result = cv2.add(result_bg, result_fg)
 
-        for i in range(sort_image.size[0]):
-            sort_col = list()
-            for j in range(sort_image.size[1]):
-                pixel = sort_pixels[i, j]
-                if pixel[0] > 150:
-                    mask_pixels[i, j] = 0
-                else:
-                    mask_pixels[i, j] = 255
-                sort_col.append(sort_pixels[i, j])
-            sort_col = sorted(sort_col, key=lambda v: v[0])
+        cv2.imshow("OG", image)
+        cv2.imshow("Flesh tone mask", flesh_tone_mask)
+        cv2.imshow("Flesh tone sorted", copied_image)
+        cv2.imshow("Result", result)
 
-            for j in range(sort_image.size[1]):
-                sort_pixels[i, j] = sort_col[j]
-
-        mask.save("./mask.jpeg")
-
-        composite_image = Image.composite(image, sort_image, mask)
-
-        composite_image.save("comp.jpeg")
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
     except ValueError:
         print(ValueError)
