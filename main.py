@@ -1,68 +1,11 @@
 import cv2
 import numpy as np
 import sys
-
-
-def get_flesh_tone_mask(
-    image: cv2.typing.MatLike,
-) -> cv2.typing.MatLike:
-    lower = np.array([45, 34, 30], dtype=np.uint8)  # Lower bound for flesh tone in RGB
-    upper = np.array(
-        [255, 104, 183], dtype=np.uint8
-    )  # Upper bound for flesh tone in RGB
-
-    mask = cv2.inRange(image, lower, upper)
-
-    return mask
-
-
-def get_luminance_mask(
-    image: cv2.typing.MatLike, threshold_value=128
-) -> cv2.typing.MatLike:
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, mask = cv2.threshold(gray_image, threshold_value, 255, cv2.THRESH_BINARY)
-    return mask
-
-
-def add_bloom(image: cv2.typing.MatLike) -> cv2.typing.MatLike:
-    # Convert the image to grayscale to find bright regions
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply a threshold to extract bright regions
-    _, bright_regions = cv2.threshold(gray_image, 200, 255, cv2.THRESH_BINARY)
-
-    # Create a 3-channel mask from the bright regions
-    bright_mask = cv2.cvtColor(bright_regions, cv2.COLOR_GRAY2BGR)
-
-    # Apply a Gaussian blur to the bright regions mask
-    blurred_mask = cv2.GaussianBlur(bright_mask, (21, 21), 0)
-
-    # Combine the original image with the blurred bright regions mask
-    bloomed_image = cv2.addWeighted(image, 1.0, blurred_mask, 0.5, 0)
-    return bloomed_image
-
-
-def sort_pixels(
-    _image: cv2.typing.MatLike, mask: cv2.typing.MatLike
-) -> cv2.typing.MatLike:
-    image = _image.copy()
-    width, height, _ = image.shape
-    for i in range(width):
-        arr = list()
-        index_arr = list()
-        for j in range(height):
-            if mask[i, j] == 255:
-                arr.append(image[i, j])
-                index_arr.append(j)
-            #     arr.append((j, image[i, j]))
-
-        arr = sorted(arr, key=lambda v: v[2])
-
-        for j in range(len(arr)):
-            color = arr[j]
-            index = index_arr[j]
-            image[i, index] = color
-    return image
+from lib.get_luminance_mask import get_luminance_mask
+from lib.add_bloom import add_bloom
+from lib.get_flesh_tone_mask import get_flesh_tone_mask
+from lib.sort_pixels import sort_pixels
+from lib.constants import OUTPUT_FOLDER
 
 
 def main():
@@ -103,9 +46,9 @@ def main():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        output_path = "sorted_result.jpg"
+        output_path = f"{OUTPUT_FOLDER}/sorted_result.jpg"
         cv2.imwrite(output_path, sorted_result)
-        output_path = "inverted_sorted_result.jpg"
+        output_path = f"{OUTPUT_FOLDER}/inverted_sorted_result.jpg"
         cv2.imwrite(output_path, inverted_sorted_result)
 
     except ValueError as e:
