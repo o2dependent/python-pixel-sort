@@ -22,16 +22,16 @@ def main():
 
         # flesh_tone_mask = get_flesh_tone_mask(image)
         # flesh_tone_mask_inv = cv2.bitwise_not(flesh_tone_mask)
-        lum_thresh = 168
+        lum_thresh = 98
         luminance_mask = get_luminance_mask(image, lum_thresh)
         luminance_mask_inv = cv2.bitwise_not(luminance_mask, 0)
 
         sorted_result = sort_pixels(image, luminance_mask)
         inverted_sorted_result = sort_pixels(image, luminance_mask_inv)
 
-        # bloomed = add_bloom(inverted_sorted_result)
+        bloomed = add_bloom(sorted_result)
 
-        dithered_result = add_dithering(image)
+        dithered_result = add_dithering(bloomed)
 
         cv2.imshow("OG", image)
         cv2.imshow("Luminance mask", luminance_mask)
