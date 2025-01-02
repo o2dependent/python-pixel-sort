@@ -30,8 +30,6 @@ def add_dithering(image: cv2.typing.MatLike) -> cv2.typing.MatLike:
                 math.floor((output_color / 255 * (len(COLOR_RANGE) - 1))),
             )
 
-            print(output_index)
-
             color_result = COLOR_RANGE[int(output_index)]
 
             # if output_color < bayer_r / len(COLOR_RANGE) - 1:

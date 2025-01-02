@@ -1,15 +1,15 @@
 import cv2
-import numpy as np
 import sys
 from lib.get_luminance_mask import get_luminance_mask
 from lib.add_bloom import add_bloom
-from lib.get_flesh_tone_mask import get_flesh_tone_mask
 from lib.sort_pixels import sort_pixels
 from lib.add_dithering import add_dithering
 from lib.constants import OUTPUT_FOLDER
 
 
 def main():
+    lum_thresh = 158
+
     if len(sys.argv) < 2:
         print("Missing arg for file")
         return
@@ -17,12 +17,16 @@ def main():
     if not path:
         print("Invalid arg for file")
         return
+
+    if len(sys.argv) >= 3:
+        new_lum_thresh = int(sys.argv[2])
+        if type(new_lum_thresh) == int:
+            lum_thresh = new_lum_thresh
     try:
         image = cv2.imread(path)
 
         # flesh_tone_mask = get_flesh_tone_mask(image)
         # flesh_tone_mask_inv = cv2.bitwise_not(flesh_tone_mask)
-        lum_thresh = 98
         luminance_mask = get_luminance_mask(image, lum_thresh)
         luminance_mask_inv = cv2.bitwise_not(luminance_mask, 0)
 
@@ -42,11 +46,11 @@ def main():
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-        output_path = f"{OUTPUT_FOLDER}/sorted_result.jpg"
+        output_path = f"{OUTPUT_FOLDER}/sorted_result.png"
         cv2.imwrite(output_path, sorted_result)
-        output_path = f"{OUTPUT_FOLDER}/inverted_sorted_result.jpg"
+        output_path = f"{OUTPUT_FOLDER}/inverted_sorted_result.png"
         cv2.imwrite(output_path, inverted_sorted_result)
-        output_path = f"{OUTPUT_FOLDER}/dithered_result.jpg"
+        output_path = f"{OUTPUT_FOLDER}/dithered_result.png"
         cv2.imwrite(output_path, dithered_result)
 
     except ValueError as e:
